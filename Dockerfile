@@ -1,9 +1,15 @@
 FROM <container_name>:<version>
 
 # Create a non-root user and switch to it
-RUN useradd -m appuser
+RUN set -eux && \
+    if command -v adduser >/dev/null 2>&1; then \
+      adduser -D -h /home/appuser appuser; \
+    else \
+      useradd -m -d /home/appuser appuser; \
+    fi
 
-RUN if command -v apt-get >/dev/null 2>&1; then \
+RUN set -eux && \
+    if command -v apt-get >/dev/null 2>&1; then \
       apt-get update -qq && \
       apt-get upgrade -y -qq && \
       apt-get clean && \
