@@ -1,0 +1,113 @@
+name: container-image-upgrade-test
+
+on:
+  workflow_dispatch:
+
+env:
+  container_image_authors: petr.ruzicka@gmail.com
+  container_image_authors_name: Petr Ruzicka
+  container_image_category: security
+  container_image_logo_url: https://raw.githubusercontent.com/MISP/intelligence-icons/513abc840b7ac92e4f8a4a7ecab2964007bf25f5/svg/threat_actor.svg
+  container_image_vendor: MyCompany
+
+defaults:
+  run:
+    shell: bash -euxo pipefail {0}
+
+permissions: read-all
+
+jobs:
+  container-image-upgrade-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        container-image:
+          - debian:stable-slim
+          - python:slim
+          - node:slim
+          - openjdk:25-slim
+          - ubuntu:latest
+          - alpine:latest
+          - nginx:latest
+          - nginx:alpine-slim
+          - nginxinc/nginx-unprivileged:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Build docker container image
+        run: |
+          sed -i "s/^FROM .*/FROM ${{ matrix.container-image }}/" Dockerfile
+
+          # Create list of topics for io.artifacthub.package.keywords
+          echo '${{ toJSON(github.event.repository.topics) }}' | jq -r '. | join(",") | "GITHUB_REPOSITORY_TOPICS=\(.)"' | tee -a "${GITHUB_ENV}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Docker metadata
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        id: docker_meta
+        with:
+          images: modiied-image-${{ matrix.container-image }}
+          labels: |
+            ## Container images repositories: https://artifacthub.io/docs/topics/repositories/container-images/
+            # keep-sorted start sticky_comments=no
+            # org.opencontainers.image.created - it is there by default
+            # org.opencontainers.image.description - it is there by default (repository description)
+            # org.opencontainers.image.source - it is there by default
+            # org.opencontainers.image.title - it is there by default
+            # org.opencontainers.image.url - it is there by default
+            # org.opencontainers.image.version - it is there by default
+            io.artifacthub.package.category=${{ env.container_image_category }}
+            io.artifacthub.package.keywords=${{ env.GITHUB_REPOSITORY_TOPICS }}
+            io.artifacthub.package.license=${{ github.event.repository.license.spdx_id }}
+            io.artifacthub.package.logo-url=${{ env.container_image_logo_url || 'https://raw.githubusercontent.com/kubernetes/community/487f994c013ea61d92cf9a341af7620037abbce3/icons/svg/resources/unlabeled/pod.svg' }}
+            io.artifacthub.package.maintainers=[{"name":"${{ env.container_image_authors_name }}","email":"${{ env.container_image_authors }}"}]
+            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/README.md
+            org.opencontainers.image.documentation=${{ github.event.repository.html_url }}/blob/${{ github.sha }}/README.md
+            org.opencontainers.image.vendor=${{ env.container_image_vendor }}
+            # keep-sorted end
+
+            ## The OpenContainers Annotations Spec: https://specs.opencontainers.org/image-spec/annotations/?v=v1.0.1#pre-defined-annotation-keys
+            # keep-sorted start sticky_comments=no
+            # org.opencontainers.image.created - it is there by default
+            # org.opencontainers.image.description - it is there by default (repository description)
+            # org.opencontainers.image.documentation - already set
+            # org.opencontainers.image.licenses - it is there by default
+            # org.opencontainers.image.revision - it is there by default
+            # org.opencontainers.image.source - it is there by default
+            # org.opencontainers.image.title - it is there by default
+            # org.opencontainers.image.url - it is there by default
+            # org.opencontainers.image.vendor - already set
+            # org.opencontainers.image.version - it is there by default
+            org.opencontainers.image.authors=${{ env.container_image_authors }}
+            org.opencontainers.image.ref.name=${{ github.ref_name }}
+            # keep-sorted end
+
+            ## Label Schema Convention: https://github.com/badouralix/dockerfiles/blob/c91181b356f92574f26d0499ee3d2be2cacd0952/LABELS.md
+            # keep-sorted start sticky_comments=no
+            com.github.actions.event_name=${{ github.event_name }}
+            com.github.actions.job=${{ github.job }}
+            com.github.actions.run_id=${{ github.run_id }}
+            com.github.actions.run_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            # keep-sorted end
+
+      - name: Build temporary container image
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        id: docker-build-push
+        env:
+          DOCKER_BUILD_SUMMARY: false
+        with:
+          load: true
+          annotations: ${{ steps.docker_meta.outputs.labels }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+
+      - name: Grype [table] - scan container image
+        uses: anchore/scan-action@7c05671ae9be166aeb155bad2d7df9121823df32 # v6.1.0
+        with:
+          image: ${{ steps.docker_meta.outputs.tags }}
+          only-fixed: true
+          output-format: table
