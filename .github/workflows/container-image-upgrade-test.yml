@@ -112,7 +112,7 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
 
       - name: "🔎 Grype - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
-        uses: anchore/scan-action@7c05671ae9be166aeb155bad2d7df9121823df32 # v6.1.0
+        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
         with:
           image: ${{ steps.docker_meta.outputs.tags }}
           only-fixed: true
@@ -120,7 +120,7 @@ jobs:
           fail-build: false
 
       - name: "🔎 Grype - Scan container image - ${{ matrix.container-image }}"
-        uses: anchore/scan-action@7c05671ae9be166aeb155bad2d7df9121823df32 # v6.1.0
+        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
         with:
           image: ${{ matrix.container-image }}
           only-fixed: true
