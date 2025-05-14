@@ -38,7 +38,7 @@ jobs:
 
       - name: Build docker container image
         run: |
-          sed -i "s/^FROM .*/FROM ${{ matrix.container-image }}/" Dockerfile
+          sed -i "s|^FROM .*|FROM ${{ matrix.container-image }}|" Dockerfile
 
           # Create list of topics for io.artifacthub.package.keywords
           echo '${{ toJSON(github.event.repository.topics) }}' | jq -r '. | join(",") | "GITHUB_REPOSITORY_TOPICS=\(.)"' | tee -a "${GITHUB_ENV}"
