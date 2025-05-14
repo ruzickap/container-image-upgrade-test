@@ -128,13 +128,13 @@ jobs:
           fail-build: false
 
       - name: "🔎 Trivy - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # 0.28.0
         with:
           image-ref: ${{ steps.docker_meta.outputs.tags }}
           ignore-unfixed: true
 
       - name: "🔎 Trivy - Scan container image - ${{ matrix.container-image }}"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # 0.28.0
         with:
           image-ref: ${{ matrix.container-image }}
           ignore-unfixed: true
