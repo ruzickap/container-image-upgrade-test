@@ -2,6 +2,17 @@ name: container-image-upgrade-test
 
 on:
   workflow_dispatch:
+    inputs:
+      vulnerability_scanner_grype:
+        description: "Grype Vulnerability Scanner"
+        type: boolean
+        required: false
+        default: false
+      vulnerability_scanner_trivy:
+        description: "Trivy Vulnerability Scanner"
+        type: boolean
+        required: false
+        default: true
 
 env:
   container_image_authors: petr.ruzicka@gmail.com
@@ -25,31 +36,57 @@ jobs:
     strategy:
       matrix:
         container-image:
-          - debian:stable-slim
-          - python:slim
-          - node:slim
-          - openjdk:25-slim
-          - ubuntu:latest
-          - alpine:latest
-          - nginx:latest
-          - nginx:alpine-slim
+          - docker.io/alpine:latest
+          - docker.io/debian:buster-slim
+          - docker.io/debian:stable-slim
+          - docker.io/nginx:alpine-slim
+          - docker.io/nginx:latest
+          - docker.io/node:latest
+          - docker.io/node:slim
+          - docker.io/openjdk:latest
+          - docker.io/php:latest
+          - docker.io/python:alpine
+          - docker.io/python:slim
+          - docker.io/ruby:alpine
+          - docker.io/ruby:latest
+          - docker.io/ruby:slim
+          - docker.io/ubuntu:latest
+          - gcr.io/distroless/base-debian12:latest
+          - gcr.io/distroless/java21-debian12:latest
+          - gcr.io/distroless/nodejs24-debian12:latest
+          - gcr.io/distroless/python3-debian12:latest
+          - gcr.io/distroless/static-debian12:latest
+          - gcr.io/distroless/static:latest
+          - registry.access.redhat.com/ubi9-micro:latest
+          - registry.access.redhat.com/ubi9-minimal:latest
+          - registry.access.redhat.com/ubi9/nodejs-22-minimal:latest
+          - registry.access.redhat.com/ubi9/nodejs-22:latest
+          - registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
+          - registry.access.redhat.com/ubi9/php-82:latest
+          - registry.access.redhat.com/ubi9/python-312:latest
+          - registry.access.redhat.com/ubi9/ruby-33:latest
+          - registry.access.redhat.com/ubi9/ubi:latest
+
     steps:
       - name: "📥 Checkout Code"
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: "⚙️ Prepare Dockerfile and environment variables"
+        if: ${{ ! contains (matrix.container-image, 'distroless') }}
         env:
           CONTAINER_IMAGE: ${{ matrix.container-image }}
         run: |
           sed -i "s|^FROM .*|FROM ${CONTAINER_IMAGE}|" Dockerfile
           cat Dockerfile
           echo '${{ toJSON(github.event.repository.topics) }}' | jq -r '. | join(",") | "GITHUB_REPOSITORY_TOPICS=\(.)"' | tee -a "${GITHUB_ENV}"
-          echo "DOCKER_META_IMAGES=\"my-custom-${CONTAINER_IMAGE%:*}\"" | tee -a "${GITHUB_ENV}"
+          echo "DOCKER_META_IMAGES=\"my-updated_${CONTAINER_IMAGE//[.\/:]/-}\"" | tee -a "${GITHUB_ENV}"
 
       - name: "🔧 Set up Docker Buildx"
+        if: ${{ ! contains (matrix.container-image, 'distroless') }}
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: "📝 Docker metadata"
+        if: ${{ ! contains (matrix.container-image, 'distroless') }}
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         id: docker_meta
         with:
@@ -100,6 +137,7 @@ jobs:
             # keep-sorted end
 
       - name: "🐳 Build temporary container image"
+        if: ${{ ! contains (matrix.container-image, 'distroless') }}
         uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
         id: docker-build-push
         env:
@@ -111,8 +149,20 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           tags: ${{ steps.docker_meta.outputs.tags }}
 
-      - name: "🔎 Grype - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
+      - name: "🔎 Grype - Scan container image - ${{ matrix.container-image }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
         uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+        id: grype_scan
+        with:
+          image: ${{ matrix.container-image }}
+          only-fixed: true
+          output-format: table
+          fail-build: false
+
+      - name: "🔎 Grype - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' && ! contains (matrix.container-image, 'distroless') }}
+        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+        id: grype_scan_built_container_image
         with:
           image: ${{ steps.docker_meta.outputs.tags }}
           # report vulnerabilities that have a confirmed fix - https://github.com/anchore/grype#showing-only-fixed-vulnerabilities
@@ -120,23 +170,87 @@ jobs:
           output-format: table
           fail-build: false
 
-      - name: "🔎 Grype - Scan container image - ${{ matrix.container-image }}"
-        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+      - name: "🔎 Trivy - Scan container image - ${{ matrix.container-image }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
         with:
-          image: ${{ matrix.container-image }}
-          only-fixed: true
-          output-format: table
-          fail-build: false
+          image-ref: ${{ matrix.container-image }}
+          ignore-unfixed: true
+          format: table
+          output: trivy-output-1.txt
 
       - name: "🔎 Trivy - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' && ! contains (matrix.container-image, 'distroless') }}
         uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
         with:
           image-ref: ${{ steps.docker_meta.outputs.tags }}
           # https://trivy.dev/v0.22.0/vulnerability/examples/filter/
           ignore-unfixed: true
+          format: table
+          output: trivy-output-2.txt
 
-      - name: "🔎 Trivy - Scan container image - ${{ matrix.container-image }}"
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
-        with:
-          image-ref: ${{ matrix.container-image }}
-          ignore-unfixed: true
+      - name: "📝 Add Grype summary"
+        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
+        env:
+          CONTAINER_IMAGE_1: ${{ matrix.container-image }}
+          CONTAINER_IMAGE_2: ${{ steps.docker_meta.outputs.tags }}
+          GRYPE_SCAN_OUTPUT_FILE_1: ${{ steps.grype_scan.outputs.scan-results-path }}
+          GRYPE_SCAN_OUTPUT_FILE_2: ${{ steps.grype_scan_built_container_image.outputs.scan-results-path }}
+        run: |
+          cat > "${GITHUB_STEP_SUMMARY}" << EOF
+          ## 🛡️ Grype: ${CONTAINER_IMAGE_1}
+
+          <details>
+          <summary>Click to view Grype scan results</summary>
+
+          \`\`\`
+          $(cat "${GRYPE_SCAN_OUTPUT_FILE_1}")
+          \`\`\`
+
+          </details>
+
+          ## 🛡️ Grype: ${CONTAINER_IMAGE_2}
+
+          <details>
+          <summary>Click to view Grype scan results</summary>
+
+          \`\`\`
+          $([[ -f "${GRYPE_SCAN_OUTPUT_FILE_2}" ]] && cat "${GRYPE_SCAN_OUTPUT_FILE_2}")
+          \`\`\`
+
+          </details>
+          EOF
+
+      - name: "📝 Add Trivy summary"
+        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
+        env:
+          CONTAINER_IMAGE_1: ${{ matrix.container-image }}
+          CONTAINER_IMAGE_2: ${{ steps.docker_meta.outputs.tags }}
+          GRYPE_SCAN_OUTPUT_FILE_1: trivy-output-1.txt
+          GRYPE_SCAN_OUTPUT_FILE_2: trivy-output-2.txt
+        run: |
+          cat > "${GITHUB_STEP_SUMMARY}" << EOF
+          ## 🔬 Trivy: ${CONTAINER_IMAGE_1}
+          $(grep '^Total:' "${GRYPE_SCAN_OUTPUT_FILE_1}")
+
+          <details>
+          <summary>Click to view Trivy scan results</summary>
+
+          \`\`\`
+          $(cat "${GRYPE_SCAN_OUTPUT_FILE_1}")
+          \`\`\`
+
+          </details>
+
+          ## 🔬 Trivy: ${CONTAINER_IMAGE_2}
+          $([[ -f "${GRYPE_SCAN_OUTPUT_FILE_2}" ]] && grep '^Total:' "${GRYPE_SCAN_OUTPUT_FILE_2}")
+
+          <details>
+          <summary>Click to view Trivy scan results</summary>
+
+          \`\`\`
+          $([[ -f "${GRYPE_SCAN_OUTPUT_FILE_2}" ]] && cat "${GRYPE_SCAN_OUTPUT_FILE_2}")
+          \`\`\`
+
+          </details>
+          EOF
