@@ -231,6 +231,7 @@ jobs:
         run: |
           cat > "${GITHUB_STEP_SUMMARY}" << EOF
           ## 🔬 Trivy: ${CONTAINER_IMAGE_1}
+          $(grep '^Total:' "${GRYPE_SCAN_OUTPUT_FILE_1}")
 
           <details>
           <summary>Click to view Trivy scan results</summary>
@@ -242,6 +243,7 @@ jobs:
           </details>
 
           ## 🔬 Trivy: ${CONTAINER_IMAGE_2}
+          $([[ -f "${GRYPE_SCAN_OUTPUT_FILE_2}" ]] && grep '^Total:' "${GRYPE_SCAN_OUTPUT_FILE_2}")
 
           <details>
           <summary>Click to view Trivy scan results</summary>
