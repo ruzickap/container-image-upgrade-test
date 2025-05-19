@@ -202,20 +202,23 @@ jobs:
 
           <details>
           <summary>Click to view Grype scan results</summary>
+
           \`\`\`
           $(cat "${GRYPE_SCAN_OUTPUT_FILE_1}")
           \`\`\`
+
           </details>
 
           ## 🛡️ Grype: ${CONTAINER_IMAGE_2}
 
           <details>
           <summary>Click to view Grype scan results</summary>
+
           \`\`\`
           $([[ -f "${GRYPE_SCAN_OUTPUT_FILE_2}" ]] && cat "${GRYPE_SCAN_OUTPUT_FILE_2}")
           \`\`\`
+
           </details>
-          ---
           EOF
 
       - name: "📝 Add Trivy summary"
@@ -231,18 +234,21 @@ jobs:
 
           <details>
           <summary>Click to view Trivy scan results</summary>
+
           \`\`\`
           $(cat "${GRYPE_SCAN_OUTPUT_FILE_1}")
           \`\`\`
+
           </details>
 
           ## 🔬 Trivy: ${CONTAINER_IMAGE_2}
 
           <details>
           <summary>Click to view Trivy scan results</summary>
+
           \`\`\`
           $([[ -f "${GRYPE_SCAN_OUTPUT_FILE_2}" ]] && cat "${GRYPE_SCAN_OUTPUT_FILE_2}")
           \`\`\`
+
           </details>
-          ---
           EOF
