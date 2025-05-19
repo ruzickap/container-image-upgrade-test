@@ -1,27 +1,22 @@
 FROM <container_name>:<version>
 
-# Create a non-root user and switch to it
-RUN set -eux && \
-    if command -v adduser >/dev/null 2>&1; then \
-      adduser -D -h /home/appuser appuser; \
-    else \
-      useradd -m -d /home/appuser appuser; \
-    fi
-
 RUN set -eux && \
     if command -v apt-get >/dev/null 2>&1; then \
       apt-get update -qq && \
       apt-get upgrade -y && \
       apt-get clean && \
-      rm -rf /var/lib/apt/lists/*; \
+      rm -rf /var/lib/apt/lists/*; && \
+      useradd --create-home --home-dir /home/appuser appuser; \
     elif command -v apk >/dev/null 2>&1; then \
       apk update && \
       apk upgrade && \
-      rm -rf /var/cache/apk/*; \
+      rm -rf /var/cache/apk/*; && \
+      adduser -D -h /home/appuser appuser; \
     elif command -v dnf >/dev/null 2>&1; then \
       dnf upgrade -y && \
       dnf clean all && \
-      rm -rf /var/cache/dnf; \
+      rm -rf /var/cache/dnf && \
+      adduser --create-home --home-dir /home/appuser appuser; \
     fi
 
 USER appuser
