@@ -38,33 +38,33 @@ jobs:
         container-image:
           - docker.io/alpine:latest
           - docker.io/debian:buster-slim
-          # - docker.io/debian:stable-slim
-          # - docker.io/nginx:alpine-slim
-          # - docker.io/nginx:latest
-          # - docker.io/node:latest
-          # - docker.io/node:slim
-          # - docker.io/openjdk:latest
-          # - docker.io/php:latest
-          # - docker.io/python:alpine
-          # - docker.io/python:slim
-          # - docker.io/ruby:alpine
-          # - docker.io/ruby:latest
-          # - docker.io/ruby:slim
-          # - docker.io/ubuntu:latest
-          # - gcr.io/distroless/base-debian12:latest
-          # - gcr.io/distroless/java-debian12:latest
-          # - gcr.io/distroless/nodejs-debian12:latest
-          # - gcr.io/distroless/python3-debian12:latest
-          # - gcr.io/distroless/static-debian12:latest
-          # - gcr.io/distroless/static:latest
-          # - registry.access.redhat.com/ubi9-micro:latest
-          # - registry.access.redhat.com/ubi9-minimal:latest
-          # - registry.access.redhat.com/ubi9/nodejs-22-minimal:latest
-          # - registry.access.redhat.com/ubi9/nodejs-22:latest
-          # - registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
-          # - registry.access.redhat.com/ubi9/php-82:latest
-          # - registry.access.redhat.com/ubi9/python-312:latest
-          # - registry.access.redhat.com/ubi9/ruby-33:latest
+          - docker.io/debian:stable-slim
+          - docker.io/nginx:alpine-slim
+          - docker.io/nginx:latest
+          - docker.io/node:latest
+          - docker.io/node:slim
+          - docker.io/openjdk:latest
+          - docker.io/php:latest
+          - docker.io/python:alpine
+          - docker.io/python:slim
+          - docker.io/ruby:alpine
+          - docker.io/ruby:latest
+          - docker.io/ruby:slim
+          - docker.io/ubuntu:latest
+          - gcr.io/distroless/base-debian12:latest
+          - gcr.io/distroless/java-debian12:latest
+          - gcr.io/distroless/nodejs-debian12:latest
+          - gcr.io/distroless/python3-debian12:latest
+          - gcr.io/distroless/static-debian12:latest
+          - gcr.io/distroless/static:latest
+          - registry.access.redhat.com/ubi9-micro:latest
+          - registry.access.redhat.com/ubi9-minimal:latest
+          - registry.access.redhat.com/ubi9/nodejs-22-minimal:latest
+          - registry.access.redhat.com/ubi9/nodejs-22:latest
+          - registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
+          - registry.access.redhat.com/ubi9/php-82:latest
+          - registry.access.redhat.com/ubi9/python-312:latest
+          - registry.access.redhat.com/ubi9/ruby-33:latest
           - registry.access.redhat.com/ubi9/ubi:latest
 
     steps:

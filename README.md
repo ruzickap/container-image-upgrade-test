@@ -10,3 +10,4 @@ Execute run: `gh workflow run --repo ruzickap/container-image-upgrade-test conta
 * [node](https://images.chainguard.dev/directory/image/node/compare)
 * [php](https://images.chainguard.dev/directory/image/php/versions)
 * [python](https://images.chainguard.dev/directory/image/python/versions)
+* [ruby](https://images.chainguard.dev/directory/image/ruby/compare)
