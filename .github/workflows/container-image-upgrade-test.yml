@@ -179,8 +179,8 @@ jobs:
           format: table
           output: trivy-output-1.txt
 
-      - name: "🔎 Trivy - Scan container image - ${{ steps.docker_meta.outputs.tags && ! contains (matrix.container-image, 'distroless') }}"
-        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
+      - name: "🔎 Trivy - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' && ! contains (matrix.container-image, 'distroless') }}
         uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
         with:
           image-ref: ${{ steps.docker_meta.outputs.tags }}

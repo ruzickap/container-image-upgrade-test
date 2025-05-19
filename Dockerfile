@@ -13,8 +13,8 @@ RUN set -eux && \
       rm -rf /var/cache/apk/* && \
       adduser -D -h /home/appuser appuser; \
     elif command -v dnf >/dev/null 2>&1; then \
-      dnf upgrade -y && \
-      dnf clean all && \
+      sudo dnf upgrade -y && \
+      sudo dnf clean all && \
       rm -rf /var/cache/dnf && \
       adduser --create-home --home-dir /home/appuser appuser; \
     fi
