@@ -18,7 +18,7 @@ RUN set -eux && \
         dnf clean all && \
         rm -rf /var/cache/dnf && \
         adduser --create-home --home-dir /home/appuser appuser; \
-      fi
+      fi \
     fi
 
 USER appuser
