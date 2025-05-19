@@ -5,12 +5,12 @@ RUN set -eux && \
       apt-get update -qq && \
       apt-get upgrade -y && \
       apt-get clean && \
-      rm -rf /var/lib/apt/lists/*; && \
+      rm -rf /var/lib/apt/lists/* && \
       useradd --create-home --home-dir /home/appuser appuser; \
     elif command -v apk >/dev/null 2>&1; then \
       apk update && \
       apk upgrade && \
-      rm -rf /var/cache/apk/*; && \
+      rm -rf /var/cache/apk/* && \
       adduser -D -h /home/appuser appuser; \
     elif command -v dnf >/dev/null 2>&1; then \
       dnf upgrade -y && \
