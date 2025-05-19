@@ -162,7 +162,7 @@ jobs:
           CONTAINER_IMAGE: ${{ steps.docker_meta.outputs.tags }}
           GRYPE_SCAN_OUTPUT_FILE: ${{ steps.grype_scan_built_container_image.outputs.scan-results-path }}
         run: |
-          cat > "${GITHUB_SUMMARY}" << EOF
+          cat > "${GITHUB_STEP_SUMMARY}" << EOF
           ## 🛡️ Grype Scan Summary for ${CONTAINER_IMAGE}
           \`\`\`
           $(cat "${GRYPE_SCAN_OUTPUT_FILE}")
@@ -185,7 +185,7 @@ jobs:
           CONTAINER_IMAGE: ${{ matrix.container-image }}
           GRYPE_SCAN_OUTPUT_FILE: ${{ steps.grype_scan.outputs.scan-results-path }}
         run: |
-          cat > "${GITHUB_SUMMARY}" << EOF
+          cat > "${GITHUB_STEP_SUMMARY}" << EOF
           ## 🛡️ Grype Scan Summary for ${CONTAINER_IMAGE}
           \`\`\`
           $(cat "${GRYPE_SCAN_OUTPUT_FILE}")
@@ -208,7 +208,7 @@ jobs:
           CONTAINER_IMAGE: ${{ steps.docker_meta.outputs.tags }}
           TRIVY_SCAN_OUTPUT_FILE: trivy-output.txt
         run: |
-          cat > "${GITHUB_SUMMARY}" << EOF
+          cat > "${GITHUB_STEP_SUMMARY}" << EOF
           ## 🛡️ Trivy Scan Summary for ${CONTAINER_IMAGE}
           \`\`\`
           $(cat "${TRIVY_SCAN_OUTPUT_FILE}")
@@ -230,7 +230,7 @@ jobs:
           CONTAINER_IMAGE: ${{ matrix.container-image }}
           TRIVY_SCAN_OUTPUT_FILE: trivy-output.txt
         run: |
-          cat > "${GITHUB_SUMMARY}" << EOF
+          cat > "${GITHUB_STEP_SUMMARY}" << EOF
           ## 🛡️ Trivy Scan Summary for ${CONTAINER_IMAGE}
           \`\`\`
           $(cat "${TRIVY_SCAN_OUTPUT_FILE}")

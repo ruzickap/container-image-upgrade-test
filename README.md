@@ -3,3 +3,7 @@
 Container Image Upgrade Test Scan
 
 Execute run: `gh workflow run --repo ruzickap/container-image-upgrade-test container-image-upgrade-test`
+
+## Chainguard details
+
+* [nginx](https://images.chainguard.dev/directory/image/nginx/compare)
