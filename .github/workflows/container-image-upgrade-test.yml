@@ -145,6 +145,16 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           tags: ${{ steps.docker_meta.outputs.tags }}
 
+      - name: "🔎 Grype - Scan container image - ${{ matrix.container-image }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
+        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
+        id: grype_scan
+        with:
+          image: ${{ matrix.container-image }}
+          only-fixed: true
+          output-format: table
+          fail-build: false
+
       - name: "🔎 Grype - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
         if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
         uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
@@ -156,41 +166,14 @@ jobs:
           output-format: table
           fail-build: false
 
-      - name: "📝 Add Grype summary - ${{ steps.docker_meta.outputs.tags }}"
-        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
-        env:
-          CONTAINER_IMAGE: ${{ steps.docker_meta.outputs.tags }}
-          GRYPE_SCAN_OUTPUT_FILE: ${{ steps.grype_scan_built_container_image.outputs.scan-results-path }}
-        run: |
-          cat > "${GITHUB_STEP_SUMMARY}" << EOF
-          ## 🛡️ Grype Scan Summary for ${CONTAINER_IMAGE}
-          \`\`\`
-          $(cat "${GRYPE_SCAN_OUTPUT_FILE}")
-          \`\`\`
-          EOF
-
-      - name: "🔎 Grype - Scan container image - ${{ matrix.container-image }}"
-        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
-        uses: anchore/scan-action@2c901ab7378897c01b8efaa2d0c9bf519cc64b9e # v6.2.0
-        id: grype_scan
+      - name: "🔎 Trivy - Scan container image - ${{ matrix.container-image }}"
+        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
         with:
-          image: ${{ matrix.container-image }}
-          only-fixed: true
-          output-format: table
-          fail-build: false
-
-      - name: "📝 Add Grype summary - ${{ matrix.container-image }}"
-        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
-        env:
-          CONTAINER_IMAGE: ${{ matrix.container-image }}
-          GRYPE_SCAN_OUTPUT_FILE: ${{ steps.grype_scan.outputs.scan-results-path }}
-        run: |
-          cat > "${GITHUB_STEP_SUMMARY}" << EOF
-          ## 🛡️ Grype Scan Summary for ${CONTAINER_IMAGE}
-          \`\`\`
-          $(cat "${GRYPE_SCAN_OUTPUT_FILE}")
-          \`\`\`
-          EOF
+          image-ref: ${{ matrix.container-image }}
+          ignore-unfixed: true
+          format: table
+          output: trivy-output-1.txt
 
       - name: "🔎 Trivy - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
         if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
@@ -200,39 +183,48 @@ jobs:
           # https://trivy.dev/v0.22.0/vulnerability/examples/filter/
           ignore-unfixed: true
           format: table
-          output: trivy-output.txt
+          output: trivy-output-2.txt
 
-      - name: "📝 Add Trivy summary - ${{ steps.docker_meta.outputs.tags }}"
-        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
+      - name: "📝 Add Grype summary"
+        if: ${{ github.event.inputs.vulnerability_scanner_grype == 'true' }}
         env:
-          CONTAINER_IMAGE: ${{ steps.docker_meta.outputs.tags }}
-          TRIVY_SCAN_OUTPUT_FILE: trivy-output.txt
+          CONTAINER_IMAGE_1: ${{ matrix.container-image }}
+          CONTAINER_IMAGE_2: ${{ steps.docker_meta.outputs.tags }}
+          GRYPE_SCAN_OUTPUT_FILE_1: ${{ steps.grype_scan.outputs.scan-results-path }}
+          GRYPE_SCAN_OUTPUT_FILE_2: ${{ steps.grype_scan_built_container_image.outputs.scan-results-path }}
         run: |
           cat > "${GITHUB_STEP_SUMMARY}" << EOF
-          ## 🛡️ Trivy Scan Summary for ${CONTAINER_IMAGE}
+          ## 🛡️ Grype: ${CONTAINER_IMAGE_1}
+
           \`\`\`
-          $(cat "${TRIVY_SCAN_OUTPUT_FILE}")
+          $(cat "${GRYPE_SCAN_OUTPUT_FILE_1}")
+          \`\`\`
+
+          ## 🛡️ Grype: ${CONTAINER_IMAGE_2}
+
+          \`\`\`
+          $(cat "${GRYPE_SCAN_OUTPUT_FILE_2}")
           \`\`\`
           EOF
 
-      - name: "🔎 Trivy - Scan container image - ${{ matrix.container-image }}"
-        if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
-        with:
-          image-ref: ${{ matrix.container-image }}
-          ignore-unfixed: true
-          format: table
-          output: trivy-output.txt
-
-      - name: "📝 Add Trivy summary - ${{ matrix.container-image }}"
+      - name: "📝 Add Trivy summary"
         if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
         env:
-          CONTAINER_IMAGE: ${{ matrix.container-image }}
-          TRIVY_SCAN_OUTPUT_FILE: trivy-output.txt
+          CONTAINER_IMAGE_1: ${{ matrix.container-image }}
+          CONTAINER_IMAGE_2: ${{ steps.docker_meta.outputs.tags }}
+          GRYPE_SCAN_OUTPUT_FILE_1: trivy-output-1.txt
+          GRYPE_SCAN_OUTPUT_FILE_2: trivy-output-2.txt
         run: |
           cat > "${GITHUB_STEP_SUMMARY}" << EOF
-          ## 🛡️ Trivy Scan Summary for ${CONTAINER_IMAGE}
+          ## 🔬 Trivy: ${CONTAINER_IMAGE_1}
+
           \`\`\`
-          $(cat "${TRIVY_SCAN_OUTPUT_FILE}")
+          $(cat "${GRYPE_SCAN_OUTPUT_FILE_1}")
+          \`\`\`
+
+          ## 🔬 Trivy: ${CONTAINER_IMAGE_2}
+
+          \`\`\`
+          $(cat "${GRYPE_SCAN_OUTPUT_FILE_2}")
           \`\`\`
           EOF
