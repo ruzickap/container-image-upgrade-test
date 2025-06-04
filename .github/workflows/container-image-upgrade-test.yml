@@ -94,7 +94,7 @@ jobs:
           tags: |
             type=raw,value=latest
           labels: |
-            ## Container images repositories: https://artifacthub.io/docs/topics/repositories/container-images/
+            ## Container image repositories: https://artifacthub.io/docs/topics/repositories/container-images/
             # keep-sorted start sticky_comments=no
             # org.opencontainers.image.created - it is there by default
             # org.opencontainers.image.description - it is there by default (repository description)
