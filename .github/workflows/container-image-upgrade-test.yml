@@ -172,7 +172,7 @@ jobs:
 
       - name: "🔎 Trivy - Scan container image - ${{ matrix.container-image }}"
         if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' }}
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
+        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # 0.31.0
         with:
           image-ref: ${{ matrix.container-image }}
           ignore-unfixed: true
@@ -181,7 +181,7 @@ jobs:
 
       - name: "🔎 Trivy - Scan container image - ${{ steps.docker_meta.outputs.tags }}"
         if: ${{ github.event.inputs.vulnerability_scanner_trivy == 'true' && ! contains (matrix.container-image, 'distroless') }}
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
+        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # 0.31.0
         with:
           image-ref: ${{ steps.docker_meta.outputs.tags }}
           # https://trivy.dev/v0.22.0/vulnerability/examples/filter/
